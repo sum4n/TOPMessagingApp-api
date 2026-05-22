@@ -4,7 +4,8 @@
   "description": "Messaging App API written in ExpressJS",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch app.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --setupFiles dotenv/config --runInBand --watch"
   },
   "repository": {
     "type": "git",
