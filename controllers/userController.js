@@ -9,6 +9,13 @@ const validateRegister = [
     .withMessage("Email can not be empty")
     .isEmail()
     .withMessage("Must use valid email format"),
+
+  body("password")
+    .trim()
+    .notEmpty()
+    .withMessage("Password can not be empty")
+    .isLength({ min: 8 })
+    .withMessage("Minimum password length is 8"),
 ];
 
 async function getAllUsers(req, res) {
