@@ -70,7 +70,14 @@ describe("POST /users/sign-up", () => {
 
     // console.log(res.body.errors);
     expect(res.status).toBe(400);
-    expect(res.body.errors[0].msg).toContain("Email can not be empty");
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "email",
+          msg: "Email can not be empty",
+        }),
+      ]),
+    );
   });
 
   it("throws error if email format is wrong", async () => {
@@ -80,7 +87,14 @@ describe("POST /users/sign-up", () => {
       .set("Accept", "application/json");
 
     expect(res.status).toBe(400);
-    expect(res.body.errors[0].msg).toContain("Must use valid email format");
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "email",
+          msg: "Must use valid email format",
+        }),
+      ]),
+    );
   });
 
   it("throws error if password is empty", async () => {
@@ -90,7 +104,14 @@ describe("POST /users/sign-up", () => {
       .set("Accept", "application/json");
 
     expect(res.status).toBe(400);
-    expect(res.body.errors[0].msg).toContain("Password can not be empty");
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "password",
+          msg: "Password can not be empty",
+        }),
+      ]),
+    );
   });
 
   it("throws error if password is less than 8 characters length", async () => {
@@ -100,6 +121,13 @@ describe("POST /users/sign-up", () => {
       .set("Accept", "application/json");
 
     expect(res.status).toBe(400);
-    expect(res.body.errors[0].msg).toContain("Minimum password length is 8");
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "password",
+          msg: "Minimum password length is 8",
+        }),
+      ]),
+    );
   });
 });
