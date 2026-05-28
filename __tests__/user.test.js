@@ -61,4 +61,15 @@ describe("POST /users/sign-up", () => {
     expect(res.body.password).not.toEqual("john");
     expect(match).toBe(true);
   });
+
+  it("throws error if email is empty", async () => {
+    const res = await request(app)
+      .post("/users/sign-up")
+      .send({ email: "", password: "pas" })
+      .set("Accept", "application/json");
+
+    // console.log(res.body.errors);
+    expect(res.status).toBe(400);
+    expect(res.body.errors[0].msg).toContain("Email can not be empty");
+  });
 });
