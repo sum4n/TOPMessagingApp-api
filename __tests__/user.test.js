@@ -140,4 +140,20 @@ describe("POST /users/sign-up", () => {
     expect(res.body.password).not.toEqual(validPassword);
     expect(match).toBe(true);
   });
+
+  it("throws error if duplicate email is used", async () => {
+    const duplicateEmail = "alice@prisma.io";
+    const res = await request(app)
+      .post("/users/sign-up")
+      .send({ email: duplicateEmail, password: "validpassword" });
+
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "email",
+          msg: "Email already exists",
+        }),
+      ]),
+    );
+  });
 });
