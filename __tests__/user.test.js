@@ -127,8 +127,15 @@ describe("POST /users/sign-up", () => {
       .send({ email: validEmail, password: validPassword })
       .set("Accept", "application/json");
 
-    const match = await bcrypt.compare(validPassword, res.body.password);
+    const user = await prisma.user.findFirst({
+      where: {
+        email: validEmail,
+      },
+    });
+    // console.log(user);
     // console.log(res.body);
+
+    const match = await bcrypt.compare(validPassword, user.password);
     expect(res.headers["content-type"]).toMatch(/json/);
     expect(res.body.password).not.toEqual(validPassword);
     expect(match).toBe(true);
