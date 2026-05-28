@@ -49,19 +49,6 @@ describe("GET /users", () => {
 });
 
 describe("POST /users/sign-up", () => {
-  // it("creates an user with encrypted password", async () => {
-  //   const res = await request(app)
-  //     .post("/users/sign-up")
-  //     .send({ email: `john@prisma.io`, password: "john" })
-  //     .set("Accept", "application/json");
-
-  //   const match = await bcrypt.compare("john", res.body.password);
-  //   // console.log(res.body);
-  //   expect(res.headers["content-type"]).toMatch(/json/);
-  //   expect(res.body.password).not.toEqual("john");
-  //   expect(match).toBe(true);
-  // });
-
   it("throws error if email is empty", async () => {
     const res = await request(app)
       .post("/users/sign-up")
@@ -129,5 +116,21 @@ describe("POST /users/sign-up", () => {
         }),
       ]),
     );
+  });
+
+  it("creates an user with encrypted password when valid email and password is given", async () => {
+    const validEmail = "valid@email.com";
+    const validPassword = "validpassword";
+
+    const res = await request(app)
+      .post("/users/sign-up")
+      .send({ email: validEmail, password: validPassword })
+      .set("Accept", "application/json");
+
+    const match = await bcrypt.compare(validPassword, res.body.password);
+    // console.log(res.body);
+    expect(res.headers["content-type"]).toMatch(/json/);
+    expect(res.body.password).not.toEqual(validPassword);
+    expect(match).toBe(true);
   });
 });
