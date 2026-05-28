@@ -1,5 +1,15 @@
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcryptjs";
+import { body, validationResult, matchedData } from "express-validator";
+
+const validateRegister = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email can not be empty")
+    .isEmail()
+    .withMessage("Must use valid email format"),
+];
 
 async function getAllUsers(req, res) {
   const allUsers = await prisma.user.findMany({
@@ -12,21 +22,25 @@ async function getAllUsers(req, res) {
   res.json({ allUsers });
 }
 
-async function createUser(req, res, next) {
-  const email = req.body.email;
-  const password = await bcrypt.hash(req.body.password, 10);
+const createUser = [
+  validateRegister,
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    const { email, password } = matchedData(req);
+    const hashed_password = await bcrypt.hash(password, 10);
 
-  try {
     const user = await prisma.user.create({
       data: {
         email: email,
-        password: password,
+        password: hashed_password,
       },
     });
-    res.json(user);
-  } catch (err) {
-    return next(err);
-  }
-}
+
+    res.status(201).json(user);
+  },
+];
 
 export { getAllUsers, createUser };
