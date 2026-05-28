@@ -46,7 +46,10 @@ const createUser = [
       },
     });
 
-    res.status(201).json(user);
+    res.status(201).json({
+      id: user.id,
+      email: user.email,
+    });
   },
 ];
 
