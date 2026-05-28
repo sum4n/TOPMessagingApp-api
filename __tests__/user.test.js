@@ -72,4 +72,14 @@ describe("POST /users/sign-up", () => {
     expect(res.status).toBe(400);
     expect(res.body.errors[0].msg).toContain("Email can not be empty");
   });
+
+  it("throws error if email format is wrong", async () => {
+    const res = await request(app)
+      .post("/users/sign-up")
+      .send({ email: "badformatemial.com", password: "password" })
+      .set("Accept", "application/json");
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors[0].msg).toContain("Must use valid email format");
+  });
 });
