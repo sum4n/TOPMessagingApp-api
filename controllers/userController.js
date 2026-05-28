@@ -33,23 +33,41 @@ const createUser = [
   validateRegister,
   async (req, res) => {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+
     const { email, password } = matchedData(req);
-    const hashed_password = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        email: email,
-        password: hashed_password,
-      },
-    });
+    try {
+      const user = await prisma.user.create({
+        data: {
+          email: email,
+          password: hashedPassword,
+        },
+      });
 
-    res.status(201).json({
-      id: user.id,
-      email: user.email,
-    });
+      res.status(201).json({
+        id: user.id,
+        email: user.email,
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        return res.status(400).json({
+          // This error format matches validation error format
+          errors: [
+            {
+              path: "email",
+              msg: "Email already exists",
+            },
+          ],
+        });
+      }
+
+      throw error;
+    }
   },
 ];
 
