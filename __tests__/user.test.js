@@ -92,4 +92,14 @@ describe("POST /users/sign-up", () => {
     expect(res.status).toBe(400);
     expect(res.body.errors[0].msg).toContain("Password can not be empty");
   });
+
+  it("throws error if password is less than 8 characters length", async () => {
+    const res = await request(app)
+      .post("/users/sign-up")
+      .send({ email: "good@email.com", password: "seven" })
+      .set("Accept", "application/json");
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors[0].msg).toContain("Minimum password length is 8");
+  });
 });
