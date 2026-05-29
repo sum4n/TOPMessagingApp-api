@@ -157,3 +157,53 @@ describe("POST /users/sign-up", () => {
     );
   });
 });
+
+describe("POST /users/log-in", () => {
+  it("throws error if empty email is given", async () => {
+    const res = await request(app)
+      .post("/users/log-in")
+      .send({ email: "", password: "validpassword" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "email",
+          msg: "Email can not be empty",
+        }),
+      ]),
+    );
+  });
+
+  it("throws error if wrong email format is given", async () => {
+    const res = await request(app)
+      .post("/users/log-in")
+      .send({ email: "bademail.com", password: "validpassword" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "email",
+          msg: "Must use valid email format",
+        }),
+      ]),
+    );
+  });
+
+  it("throws error is empty password is given", async () => {
+    const res = await request(app)
+      .post("/users/log-in")
+      .send({ email: "good@email.com", password: "" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "password",
+          msg: "Password can not be empty",
+        }),
+      ]),
+    );
+  });
+});
