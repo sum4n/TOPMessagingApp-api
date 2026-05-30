@@ -16,12 +16,12 @@ beforeEach(async () => {
       {
         name: "Alice",
         email: "alice@prisma.io",
-        password: "alice",
+        password: "alicepassword",
       },
       {
         name: "Bob",
         email: "bob@prisma.io",
-        password: "bob",
+        password: "bobpassword",
       },
     ],
   });
@@ -205,5 +205,32 @@ describe("POST /users/log-in", () => {
         }),
       ]),
     );
+  });
+
+  it("throws error if email does not exist in database", async () => {
+    const res = await request(app)
+      .post("/users/log-in")
+      .send({ email: "notfound@email.com", password: "password" });
+
+    // console.log(res.body);
+    expect(res.status).toBe(401);
+    expect(res.body.error).toEqual("Invalid email or password");
+  });
+
+  it("throws error if wrong password is used", async () => {
+    const email = "new@email.com";
+    const password = "bcrypthash";
+
+    const newUser = await request(app)
+      .post("/users/sign-up")
+      .send({ email, password });
+
+    const res = await request(app)
+      .post("/users/log-in")
+      .send({ email, password: "wrongPassword" });
+
+    // console.log(res.body);
+    expect(res.status).toBe(401);
+    expect(res.body.error).toEqual("Invalid email or password");
   });
 });
