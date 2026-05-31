@@ -233,4 +233,24 @@ describe("POST /users/log-in", () => {
     expect(res.status).toBe(401);
     expect(res.body.error).toEqual("Invalid email or password");
   });
+
+  it("returns jwt token when vaild credentials are provided", async () => {
+    const email = "new@email.com";
+    const password = "bcrypthash";
+
+    const newUser = await request(app)
+      .post("/users/sign-up")
+      .send({ email, password });
+
+    const res = await request(app)
+      .post("/users/log-in")
+      .send({ email, password });
+
+    // console.log(res.body);
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      message: "Auth passed",
+      token: expect.any(String),
+    });
+  });
 });
