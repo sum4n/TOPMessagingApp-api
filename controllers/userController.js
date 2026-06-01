@@ -115,4 +115,11 @@ const loginUser = [
   },
 ];
 
-export { getAllUsers, createUser, loginUser };
+const getUserProfile = async (req, res) => {
+  res.status(200).json({
+    message: "Welcome to protected route",
+    user: req.user,
+  });
+};
+
+export { getAllUsers, createUser, loginUser, getUserProfile };
