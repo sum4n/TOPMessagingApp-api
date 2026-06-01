@@ -4,9 +4,13 @@ import request from "supertest";
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcryptjs";
 import express from "express";
+import passport from "passport";
+import jwtStrategy from "../strategies/jwt.js";
+
 const app = express();
 
 app.use(express.json());
+passport.use(jwtStrategy);
 
 app.use("/users", userRouter);
 
@@ -252,5 +256,27 @@ describe("POST /users/log-in", () => {
       message: "Auth passed",
       token: expect.any(String),
     });
+  });
+});
+
+describe("GET /users/profile", () => {
+  it("user can access protected /profile route with valid token", async () => {
+    const user = await request(app)
+      .post("/users/sign-up")
+      .send({ email: "alice2@prisma.io", password: "alicepassword" });
+    // console.log(user.body);
+
+    const loginUser = await request(app)
+      .post("/users/log-in")
+      .send({ email: "alice2@prisma.io", password: "alicepassword" });
+    // console.log(loginUser.body.token);
+    const token = loginUser.body.token;
+
+    const res = await request(app)
+      .get("/users/profile")
+      .set("Authorization", `Bearer ${token}`);
+
+    // console.log(res.body);
+    expect(res.status).toBe(200);
   });
 });
