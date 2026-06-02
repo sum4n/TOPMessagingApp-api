@@ -279,4 +279,22 @@ describe("GET /users/profile", () => {
     // console.log(res.body);
     expect(res.status).toBe(200);
   });
+
+  it("thorws 401 error when accessing route without token", async () => {
+    const res = await request(app).get("/users/profile");
+
+    // console.log(res.status);
+    expect(res.status).toBe(401);
+    expect(res.text).toBe("Unauthorized");
+  });
+
+  it("throws 401 error when accessing route with invalid token", async () => {
+    const res = await request(app)
+      .get("/users/profile")
+      .set("Authorization", "Bearer invalid-token");
+
+    // console.log(res.status, res.text);
+    expect(res.status).toBe(401);
+    expect(res.text).toBe("Unauthorized");
+  });
 });
