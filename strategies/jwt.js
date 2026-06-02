@@ -13,6 +13,12 @@ const jwtStrategy = new Strategy(opts, async (jwt_payload, done) => {
       where: {
         id: jwt_payload.userId,
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        joinedAt: true,
+      },
     });
     // console.log(user);
 
