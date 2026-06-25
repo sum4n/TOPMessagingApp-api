@@ -2,6 +2,7 @@ import express from "express";
 import passport from "passport";
 import jwtStrategy from "./strategies/jwt.js";
 import userRouter from "./routes/userRouter.js";
+import messageRouter from "./routes/messageRouter.js";
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 passport.use(jwtStrategy);
 
 app.use("/users", userRouter);
+app.use("/messages", messageRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
