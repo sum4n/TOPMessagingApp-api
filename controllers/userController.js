@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcryptjs";
 import { body, validationResult, matchedData } from "express-validator";
 import jwt from "jsonwebtoken";
+import { generateToken } from "../utils/jwt.js";
 
 const validateRegister = [
   body("email")
@@ -104,10 +105,8 @@ const loginUser = [
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    const opts = {};
-    opts.expiresIn = "7d";
-    const secret = process.env.SECRET_KEY;
-    const token = jwt.sign({ userId: user.id }, secret, opts);
+    const token = generateToken(user);
+
     res.status(200).json({
       message: "Auth passed",
       token,
