@@ -14,32 +14,54 @@ passport.use(jwtStrategy);
 
 app.use("/users", userRouter);
 
-beforeEach(async () => {
-  const users = await prisma.user.createMany({
-    data: [
-      {
-        name: "Alice",
-        email: "alice@prisma.io",
-        password: "alicepassword",
-      },
-      {
-        name: "Bob",
-        email: "bob@prisma.io",
-        password: "bobpassword",
-      },
-    ],
-  });
-});
+// beforeEach(async () => {
+//   const users = await prisma.user.createMany({
+//     data: [
+//       {
+//         name: "Alice",
+//         email: "alice@prisma.io",
+//         password: "alicepassword",
+//       },
+//       {
+//         name: "Bob",
+//         email: "bob@prisma.io",
+//         password: "bobpassword",
+//       },
+//     ],
+//   });
+// });
 
-afterEach(async () => {
-  await prisma.user.deleteMany();
-});
+// afterEach(async () => {
+//   await prisma.user.deleteMany();
+// });
 
 afterAll(async () => {
+  await prisma.user.deleteMany();
   await prisma.$disconnect();
 });
 
 describe("GET /users", () => {
+  beforeAll(async () => {
+    const users = await prisma.user.createMany({
+      data: [
+        {
+          name: "Alice",
+          email: "alice@prisma.io",
+          password: await bcrypt.hash("alicePassword", 10),
+        },
+        {
+          name: "Bob",
+          email: "bob@prisma.io",
+          password: await bcrypt.hash("bobPassword", 10),
+        },
+      ],
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+  });
+
   it("returns two users", async () => {
     const res = await request(app)
       .get("/users")
@@ -53,6 +75,10 @@ describe("GET /users", () => {
 });
 
 describe("POST /users/sign-up", () => {
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+  });
+
   it("throws error if email is empty", async () => {
     const res = await request(app)
       .post("/users/sign-up")
@@ -147,6 +173,15 @@ describe("POST /users/sign-up", () => {
 
   it("throws error if duplicate email is used", async () => {
     const duplicateEmail = "alice@prisma.io";
+
+    await prisma.user.create({
+      data: {
+        name: "Alice",
+        email: duplicateEmail,
+        password: await bcrypt.hash("alicePassword", 10),
+      },
+    });
+
     const res = await request(app)
       .post("/users/sign-up")
       .send({ email: duplicateEmail, password: "validpassword" });
@@ -163,6 +198,21 @@ describe("POST /users/sign-up", () => {
 });
 
 describe("POST /users/log-in", () => {
+  const email = "new@email.com";
+  const password = "bcryptHash";
+
+  beforeAll(async () => {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.user.create({
+      data: { email, password: hashedPassword },
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+  });
+
   it("throws error if empty email is given", async () => {
     const res = await request(app)
       .post("/users/log-in")
@@ -222,13 +272,6 @@ describe("POST /users/log-in", () => {
   });
 
   it("throws error if wrong password is used", async () => {
-    const email = "new@email.com";
-    const password = "bcrypthash";
-
-    const newUser = await request(app)
-      .post("/users/sign-up")
-      .send({ email, password });
-
     const res = await request(app)
       .post("/users/log-in")
       .send({ email, password: "wrongPassword" });
@@ -240,11 +283,6 @@ describe("POST /users/log-in", () => {
 
   it("returns jwt token when vaild credentials are provided", async () => {
     const email = "new@email.com";
-    const password = "bcrypthash";
-
-    const newUser = await request(app)
-      .post("/users/sign-up")
-      .send({ email, password });
 
     const res = await request(app)
       .post("/users/log-in")
@@ -264,7 +302,7 @@ describe("GET /users/profile", () => {
     const user = await request(app)
       .post("/users/sign-up")
       .send({ email: "alice2@prisma.io", password: "alicepassword" });
-    // console.log(user.body);
+    console.log(user.body);
 
     const loginUser = await request(app)
       .post("/users/log-in")
