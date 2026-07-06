@@ -15,27 +15,6 @@ passport.use(jwtStrategy);
 
 app.use("/users", userRouter);
 
-// beforeEach(async () => {
-//   const users = await prisma.user.createMany({
-//     data: [
-//       {
-//         name: "Alice",
-//         email: "alice@prisma.io",
-//         password: "alicepassword",
-//       },
-//       {
-//         name: "Bob",
-//         email: "bob@prisma.io",
-//         password: "bobpassword",
-//       },
-//     ],
-//   });
-// });
-
-// afterEach(async () => {
-//   await prisma.user.deleteMany();
-// });
-
 afterAll(async () => {
   await prisma.user.deleteMany();
   await prisma.$disconnect();
@@ -283,8 +262,6 @@ describe("POST /users/log-in", () => {
   });
 
   it("returns jwt token when vaild credentials are provided", async () => {
-    const email = "new@email.com";
-
     const res = await request(app)
       .post("/users/log-in")
       .send({ email, password });
