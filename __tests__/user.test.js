@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import express from "express";
 import passport from "passport";
 import jwtStrategy from "../strategies/jwt.js";
+import { generateToken } from "../utils/jwt.js";
 
 const app = express();
 
@@ -298,24 +299,34 @@ describe("POST /users/log-in", () => {
 });
 
 describe("GET /users/profile", () => {
+  let token;
+  beforeAll(async () => {
+    user = await prisma.user.create({
+      data: {
+        name: "profile",
+        email: "profile@gmail.com",
+        password: await bcrypt.hash("profilePassword", 10),
+      },
+    });
+
+    token = generateToken(user);
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+  });
+
   it("user can access protected /profile route with valid token", async () => {
-    const user = await request(app)
-      .post("/users/sign-up")
-      .send({ email: "alice2@prisma.io", password: "alicepassword" });
-    console.log(user.body);
-
-    const loginUser = await request(app)
-      .post("/users/log-in")
-      .send({ email: "alice2@prisma.io", password: "alicepassword" });
-    // console.log(loginUser.body.token);
-    const token = loginUser.body.token;
-
     const res = await request(app)
       .get("/users/profile")
       .set("Authorization", `Bearer ${token}`);
 
     // console.log(res.body);
     expect(res.status).toBe(200);
+    expect(res.body.user).toMatchObject({
+      email: "profile@gmail.com",
+      name: "profile",
+    });
   });
 
   it("thorws 401 error when accessing route without token", async () => {
