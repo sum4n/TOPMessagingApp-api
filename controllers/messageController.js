@@ -1,4 +1,12 @@
 import { prisma } from "../lib/prisma.js";
+import { body, validationResult, matchedData } from "express-validator";
+
+const validateMessageContent = [
+  body("messageContent")
+    .trim()
+    .notEmpty()
+    .withMessage("Message can not be empty"),
+];
 
 async function getUserMessages(req, res) {
   const userId = req.user.id;
@@ -16,4 +24,36 @@ async function getUserMessages(req, res) {
   });
 }
 
-export { getUserMessages };
+const createUserMessage = [
+  validateMessageContent,
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { messageContent } = matchedData(req);
+    const senderId = parseInt(req.user.id);
+    const receiverId = parseInt(req.params.receiverId);
+
+    // check if receiver exists in the database
+    const receiver = await prisma.user.findUnique({
+      where: { id: receiverId },
+    });
+    if (!receiver) {
+      return res.status(404).json("Receiver not found");
+    }
+
+    const message = await prisma.message.create({
+      data: {
+        content: messageContent,
+        senderId: senderId,
+        receiverId: receiverId,
+      },
+    });
+
+    res.status(201).json({ message });
+  },
+];
+export { getUserMessages, createUserMessage };
