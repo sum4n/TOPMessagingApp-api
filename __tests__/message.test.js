@@ -99,3 +99,107 @@ describe("GET /messages", () => {
     expect(res.body.messages).toHaveLength(0);
   });
 });
+
+describe("POST /messages", () => {
+  it("throws 401 error if Authorization header is missing", async () => {
+    const res = await request(app).post("/messages/23");
+
+    expect(res.status).toBe(401);
+  });
+
+  it("throws 401 error if JWT token is missing", async () => {
+    const res = await request(app)
+      .post("/messages/23")
+      .set("Authorization", "Bearer");
+
+    expect(res.status).toBe(401);
+  });
+
+  it("throws 401 error if invalid JWT token is given", async () => {
+    const res = await request(app)
+      .post("/messages/23")
+      .set("Authorization", "Bearer invalid-token");
+
+    expect(res.status).toBe(401);
+  });
+
+  describe("POST /messages with valid JWT token", () => {
+    let token;
+    let sender;
+    let receiver;
+    beforeEach(async () => {
+      sender = await createUser("sender", "sender@email.com");
+      receiver = await createUser("receiver", "receiver@email.com");
+      token = generateToken(sender);
+    });
+
+    afterEach(async () => {
+      await prisma.message.deleteMany();
+      await prisma.user.deleteMany();
+    });
+
+    it("creates message in the database with valid JWT token", async () => {
+      const res = await request(app)
+        .post(`/messages/${receiver.id}`)
+        .send({ messageContent: "Hello from sender" })
+        .set("Authorization", `Bearer ${token}`);
+
+      const dbMessage = await prisma.message.findFirst({
+        where: {
+          senderId: sender.id,
+          receiverId: receiver.id,
+        },
+      });
+
+      expect(dbMessage).not.toBeNull();
+      expect(dbMessage.content).toBe("Hello from sender");
+      // console.log(res.body);
+      expect(res.status).toBe(201);
+      expect(res.body.message).toEqual(
+        expect.objectContaining({
+          content: "Hello from sender",
+          senderId: sender.id,
+          receiverId: receiver.id,
+        }),
+      );
+    });
+
+    it("throws error if empty message is posted", async () => {
+      const res = await request(app)
+        .post(`/messages/${receiver.id}`)
+        .send({ messageContent: "" })
+        .set("Authorization", `Bearer ${token}`);
+
+      // console.log(res.body);
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            value: "",
+            msg: "Message can not be empty",
+            path: "messageContent",
+          }),
+        ]),
+      );
+    });
+
+    it("throws error if messageContent field is missing", async () => {
+      const res = await request(app)
+        .post(`/messages/${receiver.id}`)
+        .send({})
+        .set("Authorization", `Bearer ${token}`);
+
+      // console.log(res.body);
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            value: "",
+            msg: "Message can not be empty",
+            path: "messageContent",
+          }),
+        ]),
+      );
+    });
+  });
+});
