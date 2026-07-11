@@ -20,21 +20,21 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
+const createUser = async (name, email) => {
+  return prisma.user.create({
+    data: {
+      name,
+      email,
+      password: await bcrypt.hash("test-password", 10),
+    },
+  });
+};
+
 describe("GET /messages", () => {
   afterEach(async () => {
     await prisma.message.deleteMany();
     await prisma.user.deleteMany();
   });
-
-  const createUser = async (name, email) => {
-    return prisma.user.create({
-      data: {
-        name,
-        email,
-        password: await bcrypt.hash("test-password", 10),
-      },
-    });
-  };
 
   it("throws 401 error if jwt token is missing", async () => {
     const res = await request(app)
