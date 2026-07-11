@@ -5,7 +5,9 @@ const validateMessageContent = [
   body("messageContent")
     .trim()
     .notEmpty()
-    .withMessage("Message can not be empty"),
+    .withMessage("Message can not be empty")
+    .isLength({ max: 4096 })
+    .withMessage("Message can not exceed 4096 characters"),
 ];
 
 async function getUserMessages(req, res) {
