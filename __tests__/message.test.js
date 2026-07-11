@@ -201,5 +201,17 @@ describe("POST /messages", () => {
         ]),
       );
     });
+
+    it("throws 404 error if receiver does not exist", async () => {
+      const badReceiverId = parseInt(receiver.id) + 1;
+      const res = await request(app)
+        .post(`/messages/${badReceiverId}`)
+        .send({ messageContent: "Hello from sender" })
+        .set("Authorization", `Bearer ${token}`);
+
+      // console.log(res.body);
+      expect(res.status).toBe(404);
+      expect(res.body).toEqual("Receiver not found");
+    });
   });
 });
