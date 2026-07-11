@@ -237,5 +237,35 @@ describe("POST /messages", () => {
         }),
       );
     });
+
+    it("throws error if max character length 4096 is exceeded", async () => {
+      const longMessage = "a".repeat(4097);
+      const res = await request(app)
+        .post(`/messages/${receiver.id}`)
+        .send({ messageContent: longMessage })
+        .set("Authorization", `Bearer ${token}`);
+
+      // console.log(res.body);
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            msg: "Message can not exceed 4096 characters",
+            path: "messageContent",
+          }),
+        ]),
+      );
+    });
+
+    it("creates mesasge at exactly 4096 characters", async () => {
+      const message = "a".repeat(4096);
+      const res = await request(app)
+        .post(`/messages/${receiver.id}`)
+        .send({ messageContent: message })
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(201);
+      expect(res.body.message.content.length).toBe(4096);
+    });
   });
 });
