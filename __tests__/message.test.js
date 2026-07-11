@@ -213,5 +213,29 @@ describe("POST /messages", () => {
       expect(res.status).toBe(404);
       expect(res.body).toEqual("Receiver not found");
     });
+
+    it("creates message when sender and receiver are same user", async () => {
+      const res = await request(app)
+        .post(`/messages/${sender.id}`)
+        .send({ messageContent: "Send message to self" })
+        .set("Authorization", `Bearer ${token}`);
+
+      const dbMessage = await prisma.message.findFirst({
+        where: { senderId: sender.id, receiverId: sender.id },
+      });
+
+      expect(dbMessage).not.toBeNull();
+      expect(dbMessage.content).toEqual("Send message to self");
+
+      // console.log(res.body);
+      expect(res.status).toBe(201);
+      expect(res.body.message).toEqual(
+        expect.objectContaining({
+          content: "Send message to self",
+          senderId: sender.id,
+          receiverId: sender.id,
+        }),
+      );
+    });
   });
 });
