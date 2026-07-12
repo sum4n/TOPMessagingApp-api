@@ -269,3 +269,26 @@ describe("POST /messages", () => {
     });
   });
 });
+
+describe("GET /messages/:userId", () => {
+  it("throws error if user is not authenticated with JWT", async () => {
+    const res = await request(app).get("/messages/1");
+    expect(res.status).toBe(401);
+  });
+
+  it("throws error if no jwt token is used", async () => {
+    const res = await request(app)
+      .get("/messages/1")
+      .set("Authorization", "Bearer");
+
+    expect(res.status).toBe(401);
+  });
+
+  it("throws error if invalid/bad jwt token is used", async () => {
+    const res = await request(app)
+      .get("/messages/1")
+      .set("Authorization", "Bearer bad-token");
+
+    expect(res.status).toBe(401);
+  });
+});
