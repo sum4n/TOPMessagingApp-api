@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getUserMessages,
   createUserMessage,
+  getConversation,
 } from "../controllers/messageController.js";
 import passport from "passport";
 
@@ -17,6 +18,12 @@ messageRouter.post(
   "/:receiverId",
   passport.authenticate("jwt", { session: false }),
   createUserMessage,
+);
+
+messageRouter.get(
+  "/:userId",
+  passport.authenticate("jwt", { session: false }),
+  getConversation,
 );
 
 export default messageRouter;
