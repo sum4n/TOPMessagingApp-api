@@ -58,4 +58,11 @@ const createUserMessage = [
     res.status(201).json({ message });
   },
 ];
-export { getUserMessages, createUserMessage };
+
+async function getConversation(req, res) {
+  const userId = req.params.userId;
+
+  res.status(200).json("conversation");
+}
+
+export { getUserMessages, createUserMessage, getConversation };
