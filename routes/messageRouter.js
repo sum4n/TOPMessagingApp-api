@@ -21,7 +21,7 @@ messageRouter.post(
 );
 
 messageRouter.get(
-  "/:userId",
+  "/:otherUserId",
   passport.authenticate("jwt", { session: false }),
   getConversation,
 );
