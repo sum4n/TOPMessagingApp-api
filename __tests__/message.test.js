@@ -270,7 +270,7 @@ describe("POST /messages", () => {
   });
 });
 
-describe("GET /messages/:userId", () => {
+describe("GET /messages/:otherUserId", () => {
   it("throws error if user is not authenticated with JWT", async () => {
     const res = await request(app).get("/messages/1");
     expect(res.status).toBe(401);
@@ -290,5 +290,79 @@ describe("GET /messages/:userId", () => {
       .set("Authorization", "Bearer bad-token");
 
     expect(res.status).toBe(401);
+  });
+  describe("GET /messages/:otherUserId with valid JWT", () => {
+    let token;
+    let sender;
+    let receiver;
+    let anotherUser;
+    beforeEach(async () => {
+      sender = await createUser("sender", "sender@email.com");
+      receiver = await createUser("receiver", "receiver@email.com");
+      anotherUser = await createUser("anotherUser", "anotherUser@email.com");
+      token = generateToken(sender);
+
+      await prisma.message.createMany({
+        data: [
+          {
+            content: "Hello from sender",
+            senderId: sender.id,
+            receiverId: receiver.id,
+            createdAT: new Date("2026-07-13T03:14:01.816Z"),
+          },
+
+          {
+            content: "Another User says hello",
+            senderId: anotherUser.id,
+            receiverId: sender.id,
+          },
+          {
+            content: "Greetings from receiver",
+            senderId: receiver.id,
+            receiverId: sender.id,
+            createdAT: new Date("2026-07-13T03:15:01.816Z"),
+          },
+        ],
+      });
+    });
+
+    afterEach(async () => {
+      await prisma.message.deleteMany();
+      await prisma.user.deleteMany();
+    });
+
+    it("fetches conversation between authenticated user and specified user", async () => {
+      const res = await request(app)
+        .get(`/messages/${receiver.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.messages).toHaveLength(2);
+    });
+
+    it("excludes messages from anotherUser", async () => {
+      const res = await request(app)
+        .get(`/messages/${receiver.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      const hasAnotherUserId = res.body.messages.some(
+        (message) =>
+          message.senderId === anotherUser.id ||
+          message.receiverId === anotherUser.id,
+      );
+      // console.log(hasAnotherUserId);
+
+      expect(res.status).toBe(200);
+      expect(hasAnotherUserId).toBeFalsy();
+    });
+
+    it("sorts messages in conversation from newest to oldest", async () => {
+      const res = await request(app)
+        .get(`/messages/${receiver.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.messages[0].content).toMatch("Greetings from receiver");
+    });
   });
 });
