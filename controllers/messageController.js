@@ -60,9 +60,26 @@ const createUserMessage = [
 ];
 
 async function getConversation(req, res) {
-  const userId = req.params.userId;
+  const otherUserId = parseInt(req.params.otherUserId);
+  const loggedInUserId = req.user.id;
 
-  res.status(200).json("conversation");
+  const messages = await prisma.message.findMany({
+    where: {
+      OR: [
+        {
+          senderId: loggedInUserId,
+          receiverId: otherUserId,
+        },
+        {
+          senderId: otherUserId,
+          receiverId: loggedInUserId,
+        },
+      ],
+    },
+    orderBy: { createdAT: "desc" },
+  });
+
+  res.status(200).json({ messages });
 }
 
 export { getUserMessages, createUserMessage, getConversation };
