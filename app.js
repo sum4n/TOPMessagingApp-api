@@ -15,7 +15,8 @@ app.use("/messages", messageRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ error: err.message });
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({ error: err.message });
 });
 
 const PORT = 3000;
