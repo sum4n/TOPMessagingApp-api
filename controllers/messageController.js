@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { body, validationResult, matchedData } from "express-validator";
+import { AppError } from "../utils/AppError.js";
 
 const validateMessageContent = [
   body("messageContent")
@@ -62,6 +63,16 @@ const createUserMessage = [
 async function getConversation(req, res) {
   const otherUserId = parseInt(req.params.otherUserId);
   const loggedInUserId = req.user.id;
+
+  const otherUser = await prisma.user.findUnique({
+    where: {
+      id: otherUserId,
+    },
+  });
+
+  if (!otherUser) {
+    throw new AppError("User not found", 404);
+  }
 
   const messages = await prisma.message.findMany({
     where: {
