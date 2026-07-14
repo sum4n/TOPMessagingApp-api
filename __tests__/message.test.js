@@ -14,6 +14,12 @@ passport.use(jwtStrategy);
 
 app.use("/messages", messageRouter);
 
+app.use((err, req, res, next) => {
+  // console.error(err.stack);
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({ error: err.message });
+});
+
 afterAll(async () => {
   await prisma.message.deleteMany();
   await prisma.user.deleteMany();
@@ -296,10 +302,15 @@ describe("GET /messages/:otherUserId", () => {
     let sender;
     let receiver;
     let anotherUser;
+    let userWithNoMessage;
     beforeEach(async () => {
       sender = await createUser("sender", "sender@email.com");
       receiver = await createUser("receiver", "receiver@email.com");
       anotherUser = await createUser("anotherUser", "anotherUser@email.com");
+      userWithNoMessage = await createUser(
+        "userWithNoMessage",
+        "userwithnomessage@email.com",
+      );
       token = generateToken(sender);
 
       await prisma.message.createMany({
@@ -363,6 +374,27 @@ describe("GET /messages/:otherUserId", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.messages[0].content).toMatch("Greetings from receiver");
+    });
+
+    it("throws error 404 if specified user is not found", async () => {
+      const res = await request(app)
+        .get(`/messages/${receiver.id + 9999}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      // console.log(res.error);
+      // console.log(res.body);
+      expect(res.status).toBe(404);
+      expect(res.body.error).toEqual("User not found");
+    });
+
+    it("gets empty array if there are no messages between users", async () => {
+      const res = await request(app)
+        .get(`/messages/${userWithNoMessage.id}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      // console.log(res.body);
+      expect(res.status).toBe(200);
+      expect(res.body.messages).toHaveLength(0);
     });
   });
 });
