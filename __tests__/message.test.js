@@ -217,7 +217,7 @@ describe("POST /messages", () => {
 
       // console.log(res.body);
       expect(res.status).toBe(404);
-      expect(res.body).toEqual("Receiver not found");
+      expect(res.body.error).toEqual("Receiver not found");
     });
 
     it("creates message when sender and receiver are same user", async () => {

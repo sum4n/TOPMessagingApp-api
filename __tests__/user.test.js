@@ -15,6 +15,11 @@ passport.use(jwtStrategy);
 
 app.use("/users", userRouter);
 
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({ error: err.message });
+});
+
 afterAll(async () => {
   await prisma.user.deleteMany();
   await prisma.$disconnect();
