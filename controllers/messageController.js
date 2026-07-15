@@ -45,7 +45,7 @@ const createUserMessage = [
       where: { id: receiverId },
     });
     if (!receiver) {
-      return res.status(404).json("Receiver not found");
+      throw new AppError("Receiver not found", 404);
     }
 
     const message = await prisma.message.create({

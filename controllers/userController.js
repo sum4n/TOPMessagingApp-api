@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { body, validationResult, matchedData } from "express-validator";
 import jwt from "jsonwebtoken";
 import { generateToken } from "../utils/jwt.js";
+import { AppError } from "../utils/AppError.js";
 
 const validateRegister = [
   body("email")
@@ -102,7 +103,7 @@ const loginUser = [
     const match = user && (await bcrypt.compare(password, user.password));
 
     if (!user || !match) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      throw new AppError("Invalid email or password", 401);
     }
 
     const token = generateToken(user);
