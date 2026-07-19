@@ -1,7 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcryptjs";
 import { body, validationResult, matchedData } from "express-validator";
-import jwt from "jsonwebtoken";
 import { generateToken } from "../utils/jwt.js";
 import { AppError } from "../utils/AppError.js";
 
@@ -121,4 +120,40 @@ const getUserProfile = async (req, res) => {
   });
 };
 
-export { getAllUsers, createUser, loginUser, getUserProfile };
+const getUserListOrderedByMessages = async (req, res) => {
+  const usersOrderedByChat = await prisma.$queryRaw`
+    WITH chat_list AS (
+       SELECT
+        MAX("createdAT") AS "lastMessageAt", 
+        CASE
+          WHEN "senderId" = ${req.user.id} THEN "receiverId"
+          ELSE "senderId"
+        END AS "chatId"
+      FROM "Message"
+      WHERE "senderId" = ${req.user.id} OR "receiverId" = ${req.user.id}
+      GROUP BY "chatId"
+      ORDER BY "lastMessageAt" DESC
+    )
+    SELECT 
+      "chat_list"."chatId",
+      "chat_list"."lastMessageAt",
+      "User".id AS "userId",
+      CASE
+        WHEN "User"."name" IS NULL THEN "User"."email"
+        ELSE "User"."name"
+      END AS "user"
+    FROM "User"
+    LEFT JOIN "chat_list" ON "User".id = "chat_list"."chatId"
+    WHERE "User".id != ${req.user.id} 
+     `;
+
+  res.status(200).json({ users: usersOrderedByChat });
+};
+
+export {
+  getAllUsers,
+  createUser,
+  loginUser,
+  getUserProfile,
+  getUserListOrderedByMessages,
+};
