@@ -27,7 +27,7 @@ afterAll(async () => {
 
 describe("GET /users", () => {
   beforeAll(async () => {
-    const users = await prisma.user.createMany({
+    await prisma.user.createMany({
       data: [
         {
           name: "Alice",
@@ -283,7 +283,7 @@ describe("POST /users/log-in", () => {
 describe("GET /users/profile", () => {
   let token;
   beforeAll(async () => {
-    user = await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name: "profile",
         email: "profile@gmail.com",
@@ -327,5 +327,102 @@ describe("GET /users/profile", () => {
     // console.log(res.status, res.text);
     expect(res.status).toBe(401);
     expect(res.text).toBe("Unauthorized");
+  });
+});
+
+describe("GET /users/userChats", () => {
+  let token;
+  let users;
+  beforeAll(async () => {
+    users = await prisma.user.createManyAndReturn({
+      data: [
+        {
+          name: "Alice",
+          email: "alice@prisma.io",
+          password: await bcrypt.hash("alicePassword", 10),
+        },
+        {
+          name: "Bob",
+          email: "bob@prisma.io",
+          password: await bcrypt.hash("bobPassword", 10),
+        },
+        {
+          //name: "Martha",
+          email: "martha@prisma.io",
+          password: await bcrypt.hash("marthaPassword", 10),
+        },
+        {
+          name: "Dave",
+          email: "dave@prisma.id",
+          password: await bcrypt.hash("davepassword", 10),
+        },
+      ],
+    });
+    // console.log(users);
+    token = generateToken(users[0]);
+
+    await prisma.message.createMany({
+      data: [
+        {
+          content: "Hello from Alice",
+          senderId: users[0].id,
+          receiverId: users[1].id,
+          createdAT: "2026-07-18T00:32:44.989Z",
+        },
+
+        {
+          content: "Hello from Bob",
+          senderId: users[1].id,
+          receiverId: users[0].id,
+          createdAT: "2026-07-18T00:32:45.989Z",
+        },
+        {
+          content: "Greetings from Martha",
+          senderId: users[2].id,
+          receiverId: users[0].id,
+          createdAT: "2026-07-18T00:32:46.989Z",
+        },
+        {
+          content: "Hello Martha from Dev",
+          senderId: users[3].id,
+          receiverId: users[2].id,
+          createdAT: "2026-07-18T00:32:47.989Z",
+        },
+        {
+          content: "Hello again from Alice",
+          senderId: users[0].id,
+          receiverId: users[1].id,
+          createdAT: "2026-07-18T00:32:48.989Z",
+        },
+      ],
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.message.deleteMany();
+    await prisma.user.deleteMany();
+  });
+
+  it("does not contain the logged in user", async () => {
+    const res = await request(app)
+      .get("/users/chats")
+      .set("Authorization", `Bearer ${token}`);
+
+    console.log(res.body);
+    expect(res.status).toBe(200);
+    expect(res.body.users).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ userId: users[0].id }),
+      ]),
+    );
+  });
+
+  it("contains contains all other users", async () => {
+    const res = await request(app)
+      .get("/users/chats")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.users).toHaveLength(3);
   });
 });
