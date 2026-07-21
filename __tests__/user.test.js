@@ -403,12 +403,29 @@ describe("GET /users/userChats", () => {
     await prisma.user.deleteMany();
   });
 
+  it("throws 401 error if invalid JWT token is provided", async () => {
+    const res = await request(app)
+      .get("/users/chats")
+      .set("Authorization", "Bearer invalid-token");
+
+    expect(res.status).toBe(401);
+    expect(res.text).toBe("Unauthorized");
+  });
+
+  it("thorws 401 error when accessing route without token", async () => {
+    const res = await request(app).get("/users/chats");
+
+    // console.log(res.status);
+    expect(res.status).toBe(401);
+    expect(res.text).toBe("Unauthorized");
+  });
+
   it("does not contain the logged in user", async () => {
     const res = await request(app)
       .get("/users/chats")
       .set("Authorization", `Bearer ${token}`);
 
-    console.log(res.body);
+    // console.log(res.body);
     expect(res.status).toBe(200);
     expect(res.body.users).not.toEqual(
       expect.arrayContaining([
