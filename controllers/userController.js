@@ -141,17 +141,32 @@ const updateUserProfile = [
     const { name } = matchedData(req);
     const user = req.user;
 
-    const updatedProfile = await prisma.user.update({
-      where: { email: user.email },
-      data: { name: name },
-    });
+    try {
+      const updatedProfile = await prisma.user.update({
+        where: { email: user.email },
+        data: { name: name },
+      });
 
-    const { password, ...profileWithoutPassword } = updatedProfile;
+      const { password, ...profileWithoutPassword } = updatedProfile;
 
-    res.status(200).json({
-      message: "Profile updated",
-      profile: profileWithoutPassword,
-    });
+      res.status(200).json({
+        message: "Profile updated",
+        profile: profileWithoutPassword,
+      });
+    } catch (error) {
+      if (error.code === "P2002") {
+        res.status(400).json({
+          errors: [
+            {
+              path: "name",
+              msg: "Name already exists",
+            },
+          ],
+        });
+      }
+
+      throw error;
+    }
   },
 ];
 
