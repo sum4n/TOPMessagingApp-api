@@ -31,6 +31,15 @@ const validateLogin = [
   body("password").trim().notEmpty().withMessage("Password can not be empty"),
 ];
 
+const validateName = [
+  body("name")
+    .trim()
+    .notEmpty()
+    .withMessage("Name can not be empty")
+    .isLength({ min: 2 })
+    .withMessage("Minimum name length is 2"),
+];
+
 async function getAllUsers(req, res) {
   const allUsers = await prisma.user.findMany({
     include: {
@@ -120,6 +129,32 @@ const getUserProfile = async (req, res) => {
   });
 };
 
+const updateUserProfile = [
+  validateName,
+  async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name } = matchedData(req);
+    const user = req.user;
+
+    const updatedProfile = await prisma.user.update({
+      where: { email: user.email },
+      data: { name: name },
+    });
+
+    const { password, ...profileWithoutPassword } = updatedProfile;
+
+    res.status(200).json({
+      message: "Profile updated",
+      profile: profileWithoutPassword,
+    });
+  },
+];
+
 const getUserListOrderedByMessages = async (req, res) => {
   const usersOrderedByChat = await prisma.$queryRaw`
     WITH chat_list AS (
@@ -155,5 +190,6 @@ export {
   createUser,
   loginUser,
   getUserProfile,
+  updateUserProfile,
   getUserListOrderedByMessages,
 };
