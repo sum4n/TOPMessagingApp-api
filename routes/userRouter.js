@@ -4,6 +4,7 @@ import {
   createUser,
   loginUser,
   getUserProfile,
+  updateUserProfile,
   getUserListOrderedByMessages,
 } from "../controllers/userController.js";
 import passport from "passport";
@@ -17,6 +18,11 @@ userRouter.get(
   "/profile",
   passport.authenticate("jwt", { session: false }),
   getUserProfile,
+);
+userRouter.put(
+  "/profile",
+  passport.authenticate("jwt", { session: false }),
+  updateUserProfile,
 );
 userRouter.get(
   "/chats",
