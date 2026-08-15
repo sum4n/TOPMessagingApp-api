@@ -155,7 +155,7 @@ const updateUserProfile = [
       });
     } catch (error) {
       if (error.code === "P2002") {
-        res.status(400).json({
+        return res.status(400).json({
           errors: [
             {
               path: "name",
