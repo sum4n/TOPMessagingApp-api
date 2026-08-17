@@ -188,15 +188,12 @@ const getUserListOrderedByMessages = async (req, res) => {
       "chat_list"."chatId",
       "chat_list"."lastMessageAt",
       "User".id AS "userId",
-      CASE
-        WHEN "User"."name" IS NULL THEN "User"."email"
-        ELSE "User"."name"
-      END AS "user"
+      "User".name AS "name",
+      "User".email AS "email"
     FROM "User"
     LEFT JOIN "chat_list" ON "User".id = "chat_list"."chatId"
     WHERE "User".id != ${req.user.id} 
      `;
-
   res.status(200).json({ users: usersOrderedByChat });
 };
 
