@@ -182,7 +182,6 @@ const getUserListOrderedByMessages = async (req, res) => {
       FROM "Message"
       WHERE "senderId" = ${req.user.id} OR "receiverId" = ${req.user.id}
       GROUP BY "chatId"
-      ORDER BY "lastMessageAt" DESC
     )
     SELECT 
       "chat_list"."chatId",
@@ -192,7 +191,8 @@ const getUserListOrderedByMessages = async (req, res) => {
       "User".email AS "email"
     FROM "User"
     LEFT JOIN "chat_list" ON "User".id = "chat_list"."chatId"
-    WHERE "User".id != ${req.user.id} 
+    WHERE "User".id != ${req.user.id}
+    ORDER BY "lastMessageAt" DESC NULLS LAST, "User"."email" ASC
      `;
   res.status(200).json({ users: usersOrderedByChat });
 };
