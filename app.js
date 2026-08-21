@@ -3,12 +3,21 @@ import passport from "passport";
 import jwtStrategy from "./strategies/jwt.js";
 import userRouter from "./routes/userRouter.js";
 import messageRouter from "./routes/messageRouter.js";
+import cors from "cors";
 
 const app = express();
 
 app.use(express.json());
 
 passport.use(jwtStrategy);
+
+const corsOptions = cors({
+  origin: process.env.originURL,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+});
+
+app.use(corsOptions);
 
 app.use("/users", userRouter);
 app.use("/messages", messageRouter);
