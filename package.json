@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "description": "Messaging App API written in ExpressJS",
   "main": "app.js",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
+    "start": "node app.js",
     "dev": "node --watch app.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --setupFiles dotenv/config --runInBand --watch"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --setupFiles dotenv/config --runInBand",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --setupFiles dotenv/config --runInBand --watch"
   },
   "repository": {
     "type": "git",
@@ -26,7 +31,6 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "express-session": "^1.19.0",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
     "passport": "^0.7.0",
